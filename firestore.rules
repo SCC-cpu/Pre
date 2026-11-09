@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email == "ppomberl@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    function isCustomer() {
+      return signedIn()
+        && get(/databases/$(database)/documents/configuracion/acceso).data.customerUid == request.auth.uid;
+    }
+
+    function validProduct(data) {
+      return data.keys().hasAll(["name", "category", "tablePrice", "boxPrice"])
+        && data.keys().hasOnly(["name", "category", "tablePrice", "boxPrice"])
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 80
+        && data.category in ["congelado", "fresco", "embutidos", "res", "pollo", "pescado"]
+        && data.tablePrice is number
+        && data.tablePrice >= 0
+        && data.boxPrice is number
+        && data.boxPrice >= 0;
+    }
+
+    match /productos/{productId} {
+      allow read: if isAdmin() || isCustomer();
+      allow create, update: if isAdmin() && validProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /configuracion/acceso {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#c6922e">
+  <title>Lista de precios | El Colorado</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <img class="brand-logo" src="colorado.png" alt="Logo de Super Carnes El Colorado">
+    <div class="brand-copy">
+      <p class="eyebrow">SUPER CARNES</p>
+      <h1>El Colorado</h1>
+      <p class="brand-subtitle">Lista de precios</p>
+    </div>
+    <div class="header-tools">
+      <div class="storage-indicator" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connection-label">Conectando con Firebase...</span>
+      </div>
+      <div class="role-controls">
+        <span id="role-label" class="role-label">Sin sesión</span>
+        <button id="admin-login-button" class="button button-gold" type="button">Iniciar sesión</button>
+        <button id="logout-button" class="button button-outline" type="button" hidden>Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section id="signed-out-view" class="signed-out panel">
+      <p class="eyebrow">ACCESO RESTRINGIDO</p>
+      <h2>Inicia sesión para consultar el catálogo</h2>
+      <p id="setup-message" class="message" role="status" aria-live="polite">Conectando con Firebase...</p>
+      <button id="signed-out-login-button" class="button button-primary" type="button">Iniciar sesión</button>
+    </section>
+    <div id="authenticated-content" hidden>
+    <section class="intro">
+      <div>
+        <p class="eyebrow">CATÁLOGO DE SUCURSAL</p>
+        <h2>Precios Super Carnes El Colorado.</h2>
+        <p>Selecciona un producto para consultar sus precios.</p>
+      </div>
+      <div class="product-count"><strong id="product-count">0</strong><span>productos</span></div>
+    </section>
+
+    <section class="catalog-layout" aria-label="Catálogo de productos">
+      <div class="list-panel panel">
+        <div class="list-heading">
+          <div>
+            <h2>Productos</h2>
+            <p>Elige un renglón para ver sus precios más grandes.</p>
+          </div>
+          <label class="search-box">
+            <span class="sr-only">Buscar producto</span>
+            <span aria-hidden="true">⌕</span>
+            <input id="search" type="search" placeholder="Buscar producto" autocomplete="off">
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Producto</th>
+                <th scope="col">A mesa</th>
+                <th scope="col">Por caja</th>
+              </tr>
+            </thead>
+            <tbody id="product-list"></tbody>
+          </table>
+          <div id="empty-state" class="empty-state">
+            <span class="empty-icon" aria-hidden="true">＋</span>
+            <h3>Aún no hay productos</h3>
+            <p>El administrador agregará productos y precios al catálogo.</p>
+          </div>
+          <p id="no-results" class="no-results" hidden>No encontramos productos con ese nombre.</p>
+        </div>
+      </div>
+
+      <aside class="detail-panel panel" aria-live="polite">
+        <p class="eyebrow">PRODUCTO SELECCIONADO</p>
+        <h2 id="selected-name" class="selected-name">Selecciona un producto</h2>
+        <div class="price-display">
+          <div class="price-card">
+            <span>Precio a mesa</span>
+            <strong id="selected-table-price">—</strong>
+          </div>
+          <div class="price-card price-card-gold">
+            <span>Precio por caja</span>
+            <strong id="selected-box-price">—</strong>
+          </div>
+        </div>
+        <div id="detail-actions" class="detail-actions" hidden>
+          <button id="edit-button" class="button button-outline" type="button" disabled>Editar</button>
+          <button id="delete-button" class="button button-danger" type="button" disabled>Eliminar</button>
+        </div>
+        <p class="selection-hint">El renglón activo se resalta en la lista.</p>
+      </aside>
+    </section>
+
+    <section id="admin-panel" class="form-panel panel" aria-labelledby="form-title" hidden>
+      <div class="form-heading">
+        <div>
+          <p class="eyebrow">ADMINISTRAR CATÁLOGO</p>
+          <h2 id="form-title">Agregar producto</h2>
+        </div>
+        <p>Los cambios se guardan en Firebase.</p>
+      </div>
+      <form id="product-form">
+        <label class="field field-name">
+          <span>Nombre del producto</span>
+          <input id="name" name="name" type="text" maxlength="80" placeholder="Ej. Bistec de res" required>
+        </label>
+        <label class="field">
+          <span>Tipo de producto</span>
+          <select id="category" name="category" required>
+            <option value="congelado">Congelado</option>
+            <option value="fresco">Fresco</option>
+            <option value="embutidos">Embutidos</option>
+            <option value="res">Res</option>
+            <option value="pollo">Pollo</option>
+            <option value="pescado">Pescado</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Precio a mesa</span>
+          <span class="input-with-prefix"><span>$</span><input id="table-price" name="tablePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" required></span>
+        </label>
+        <label class="field">
+          <span>Precio por caja</span>
+          <span class="input-with-prefix"><span>$</span><input id="box-price" name="boxPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" required></span>
+        </label>
+        <div class="form-actions">
+          <button id="cancel-button" class="button button-quiet" type="button" hidden>Cancelar</button>
+          <button id="save-button" class="button button-primary" type="submit">Guardar producto</button>
+        </div>
+      </form>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+    </section>
+    <section id="customer-panel" class="form-panel panel" hidden>
+      <div class="form-heading">
+        <div>
+          <p class="eyebrow">ACCESO DE CLIENTE</p>
+          <h2>Crear el único usuario cliente</h2>
+        </div>
+        <p>Solo puede existir una cuenta de cliente.</p>
+      </div>
+      <form id="customer-form">
+        <label class="field">
+          <span>Correo del cliente</span>
+          <input id="customer-email" type="email" autocomplete="off" required>
+        </label>
+        <label class="field">
+          <span>Contraseña temporal del cliente</span>
+          <input id="customer-password" type="password" minlength="8" autocomplete="new-password" required>
+        </label>
+        <button id="create-customer-button" class="button button-primary" type="submit">Crear cliente</button>
+      </form>
+      <p id="customer-status" class="message" role="status" aria-live="polite"></p>
+    </section>
+    </div>
+  </main>
+  <dialog id="admin-dialog" class="admin-dialog" aria-labelledby="dialog-title">
+    <form id="admin-access-form">
+      <p class="eyebrow">ACCESO RESTRINGIDO</p>
+      <h2 id="dialog-title">Iniciar sesión</h2>
+      <p id="dialog-description" class="dialog-description"></p>
+      <label class="field">
+        <span>Usuario CSC o correo del cliente</span>
+        <input id="login-identity" type="text" autocomplete="username" required>
+      </label>
+      <label class="field">
+        <span>Contraseña</span>
+        <input id="login-password" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="auth-error" class="message error" role="alert" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button id="cancel-login-button" class="button button-quiet" type="button">Cancelar</button>
+        <button id="auth-submit-button" class="button button-primary" type="submit">Iniciar sesión</button>
+      </div>
+    </form>
+  </dialog>
+  <footer>Precios en pesos mexicanos (MXN)</footer>
+</body>
+</html>
