@@ -144,6 +144,7 @@ body.customer-view #admin-panel,
 body.customer-view #customer-panel,
 body.customer-view footer { display: none; }
 body.customer-view .catalog-layout { grid-template-columns: minmax(0, 1.6fr) minmax(280px, .8fr); }
+body.customer-view .detail-panel { display: flex; }
 body.customer-view .list-heading { display: none; }
 
 @media (max-width: 900px) {
