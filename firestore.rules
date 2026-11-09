@@ -28,7 +28,7 @@ service cloud.firestore {
         && data.name is string
         && data.name.size() > 0
         && data.name.size() <= 80
-        && data.category in ["congelado", "fresco", "embutidos", "res", "pollo", "pescado"]
+        && data.category in ["congelado", "fresco", "embutidos", "res", "pollo", "pescado", "papas"]
         && data.tablePrice is number
         && data.tablePrice >= 0
         && data.boxPrice is number
