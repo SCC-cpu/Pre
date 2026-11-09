@@ -11,11 +11,15 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    // CORRECCIÓN: Ahora valida directamente por el correo del cliente,
-    // eliminando la lectura a la colección 'configuracion' que causaba el error internal.
     function isCustomer() {
       return signedIn()
-        && request.auth.token.email == "colorado3oscar@gmail.com";
+        && (
+          exists(/databases/$(database)/documents/clientes/$(request.auth.uid))
+          || (
+            exists(/databases/$(database)/documents/configuracion/acceso)
+            && get(/databases/$(database)/documents/configuracion/acceso).data.customerUid == request.auth.uid
+          )
+        );
     }
 
     function validProduct(data) {
@@ -39,6 +43,11 @@ service cloud.firestore {
 
     match /configuracion/acceso {
       allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /clientes/{customerId} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == customerId);
       allow write: if false;
     }
 
