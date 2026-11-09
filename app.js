@@ -124,10 +124,13 @@ function updateRoleView() {
   const isCustomerView = Boolean(currentUser) && (!isAdmin || isCustomerPreview);
   document.body.classList.toggle("admin-mode", isAdmin);
   document.body.classList.toggle("customer-view", isCustomerView);
-  roleLabel.textContent = !currentUser ? "Sin sesión" : isCustomerPreview ? "Vista cliente" : isAdmin ? "Administrador" : "Cliente";
+  roleLabel.textContent = !currentUser ? "Sin sesión" : isCustomerPreview ? "Cliente" : isAdmin ? "Administrador" : "Cliente";
   adminLoginButton.hidden = Boolean(currentUser);
   customerViewButton.hidden = !isAdmin;
-  customerViewButton.textContent = isCustomerPreview ? "Salir de vista cliente" : "Vista cliente";
+  customerViewButton.textContent = isCustomerPreview ? "Volver al administrador" : "Vista cliente";
+  customerViewButton.setAttribute("aria-label", isCustomerPreview
+    ? "Volver al panel de administrador; se solicitará la contraseña"
+    : "Previsualizar la vista de cliente");
   logoutButton.hidden = !currentUser || isCustomerPreview;
   signedOutView.hidden = Boolean(currentUser);
   authenticatedContent.hidden = !currentUser;
