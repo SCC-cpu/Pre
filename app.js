@@ -1,7 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
   getAuth,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signOut,
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
@@ -11,8 +13,8 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
   getFirestore,
+  onSnapshot,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-functions.js";
@@ -52,6 +54,7 @@ const boxPriceInput = document.querySelector("#box-price");
 const productList = document.querySelector("#product-list");
 const emptyState = document.querySelector("#empty-state");
 const noResults = document.querySelector("#no-results");
+const catalogStatus = document.querySelector("#catalog-status");
 const searchInput = document.querySelector("#search");
 const message = document.querySelector("#message");
 const editButton = document.querySelector("#edit-button");
@@ -74,6 +77,7 @@ const detailActions = document.querySelector("#detail-actions");
 const roleLabel = document.querySelector("#role-label");
 const connectionLabel = document.querySelector("#connection-label");
 const adminLoginButton = document.querySelector("#admin-login-button");
+const customerViewButton = document.querySelector("#customer-view-button");
 const signedOutLoginButton = document.querySelector("#signed-out-login-button");
 const logoutButton = document.querySelector("#logout-button");
 const signedOutView = document.querySelector("#signed-out-view");
@@ -86,6 +90,12 @@ const loginPasswordInput = document.querySelector("#login-password");
 const authError = document.querySelector("#auth-error");
 const authSubmitButton = document.querySelector("#auth-submit-button");
 const cancelLoginButton = document.querySelector("#cancel-login-button");
+const previewExitDialog = document.querySelector("#preview-exit-dialog");
+const previewExitForm = document.querySelector("#preview-exit-form");
+const previewExitPassword = document.querySelector("#preview-exit-password");
+const previewExitError = document.querySelector("#preview-exit-error");
+const confirmPreviewExitButton = document.querySelector("#confirm-preview-exit");
+const cancelPreviewExitButton = document.querySelector("#cancel-preview-exit");
 
 let auth;
 let database;
@@ -95,6 +105,8 @@ let products = [];
 let selectedId = null;
 let editingId = null;
 let isAdmin = false;
+let isCustomerPreview = false;
+let unsubscribeProducts = null;
 
 function showMessage(target, text, isError = false) {
   target.textContent = text;
@@ -109,15 +121,19 @@ function makeCell(text, className) {
 }
 
 function updateRoleView() {
+  const isCustomerView = Boolean(currentUser) && (!isAdmin || isCustomerPreview);
   document.body.classList.toggle("admin-mode", isAdmin);
-  roleLabel.textContent = !currentUser ? "Sin sesión" : isAdmin ? "Administrador" : "Cliente";
+  document.body.classList.toggle("customer-view", isCustomerView);
+  roleLabel.textContent = !currentUser ? "Sin sesión" : isCustomerPreview ? "Vista cliente" : isAdmin ? "Administrador" : "Cliente";
   adminLoginButton.hidden = Boolean(currentUser);
-  logoutButton.hidden = !currentUser;
+  customerViewButton.hidden = !isAdmin;
+  customerViewButton.textContent = isCustomerPreview ? "Salir de vista cliente" : "Vista cliente";
+  logoutButton.hidden = !currentUser || isCustomerPreview;
   signedOutView.hidden = Boolean(currentUser);
   authenticatedContent.hidden = !currentUser;
-  adminPanel.hidden = !isAdmin;
-  customerPanel.hidden = !isAdmin;
-  detailActions.hidden = !isAdmin;
+  adminPanel.hidden = !isAdmin || isCustomerPreview;
+  customerPanel.hidden = !isAdmin || isCustomerPreview;
+  detailActions.hidden = !isAdmin || isCustomerPreview;
 }
 
 function selectProduct(id) {
@@ -197,13 +213,23 @@ function resetForm() {
   cancelButton.hidden = true;
 }
 
-async function refreshProducts() {
-  const snapshot = await getDocs(collection(database, "productos"));
-  products = snapshot.docs.map((productDoc) => ({ id: productDoc.id, ...productDoc.data() }));
-  if (!products.some((product) => product.id === selectedId)) {
-    selectedId = products[0]?.id ?? null;
-  }
-  render();
+function subscribeToProducts() {
+  unsubscribeProducts?.();
+  unsubscribeProducts = onSnapshot(
+    collection(database, "productos"),
+    (snapshot) => {
+      catalogStatus.hidden = true;
+      products = snapshot.docs.map((productDoc) => ({ id: productDoc.id, ...productDoc.data() }));
+      if (!products.some((product) => product.id === selectedId)) {
+        selectedId = products[0]?.id ?? null;
+      }
+      render();
+    },
+    (error) => {
+      showMessage(catalogStatus, error.message || "No se pudo actualizar el catálogo.", true);
+      catalogStatus.hidden = false;
+    }
+  );
 }
 
 function openLoginDialog() {
@@ -221,6 +247,41 @@ logoutButton.addEventListener("click", async () => {
     await signOut(auth);
   } catch (error) {
     showMessage(setupMessage, error.message || "No se pudo cerrar la sesión.", true);
+  }
+});
+
+customerViewButton.addEventListener("click", () => {
+  if (!isAdmin) return;
+  if (!isCustomerPreview) {
+    isCustomerPreview = true;
+    updateRoleView();
+    return;
+  }
+
+  previewExitError.textContent = "";
+  previewExitForm.reset();
+  previewExitDialog.showModal();
+  previewExitPassword.focus();
+});
+
+cancelPreviewExitButton.addEventListener("click", () => previewExitDialog.close());
+
+previewExitForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isAdmin || !auth.currentUser) return;
+
+  confirmPreviewExitButton.disabled = true;
+  previewExitError.textContent = "";
+  try {
+    const credential = EmailAuthProvider.credential(adminEmail, previewExitPassword.value);
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    isCustomerPreview = false;
+    updateRoleView();
+    previewExitDialog.close();
+  } catch (error) {
+    previewExitError.textContent = error.message || "No se pudo confirmar la contraseña del administrador.";
+  } finally {
+    confirmPreviewExitButton.disabled = false;
   }
 });
 
@@ -246,9 +307,12 @@ adminAccessForm.addEventListener("submit", async (event) => {
 });
 
 async function handleAuthStateChange(user) {
+  unsubscribeProducts?.();
+  unsubscribeProducts = null;
   if (!user) {
     currentUser = null;
     isAdmin = false;
+    isCustomerPreview = false;
     products = [];
     selectedId = null;
     updateRoleView();
@@ -275,8 +339,9 @@ async function handleAuthStateChange(user) {
 
     currentUser = user;
     isAdmin = isAdminAccount;
+    isCustomerPreview = false;
     updateRoleView();
-    await refreshProducts();
+    subscribeToProducts();
     if (isAdmin) {
       customerStatus.textContent = "Crea una cuenta para cada cliente; podrá ingresar con su usuario y contraseña.";
     }
@@ -316,7 +381,6 @@ form.addEventListener("submit", async (event) => {
     } else {
       await updateDoc(doc(database, "productos", editingId), product);
     }
-    await refreshProducts();
     resetForm();
     showMessage(message, wasEditing ? "Producto actualizado correctamente." : "Producto guardado correctamente.");
   } catch (error) {
@@ -350,7 +414,6 @@ deleteButton.addEventListener("click", async () => {
   deleteButton.disabled = true;
   try {
     await deleteDoc(doc(database, "productos", product.id));
-    await refreshProducts();
     if (editingId === product.id) resetForm();
     showMessage(message, "Producto eliminado.");
   } catch (error) {
