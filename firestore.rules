@@ -11,11 +11,11 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    // CORRECCIÓN: Añadimos un paso de seguridad para evitar que falle si el documento no existe o está vacío
+    // CORRECCIÓN: Ahora valida directamente por el correo del cliente,
+    // eliminando la lectura a la colección 'configuracion' que causaba el error internal.
     function isCustomer() {
       return signedIn()
-        && exists(/databases/$(database)/documents/configuracion/acceso)
-        && get(/databases/$(database)/documents/configuracion/acceso).data.get('customerUid', '') == request.auth.uid;
+        && request.auth.token.email == "colorado3oscar@gmail.com";
     }
 
     function validProduct(data) {
@@ -37,7 +37,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Permitir leer la configuración si está logueado
     match /configuracion/acceso {
       allow read: if signedIn();
       allow write: if false;
