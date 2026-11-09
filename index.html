@@ -143,20 +143,20 @@
       <div class="form-heading">
         <div>
           <p class="eyebrow">ACCESO DE CLIENTE</p>
-          <h2>Crear el único usuario cliente</h2>
+          <h2>Crear usuario de cliente</h2>
         </div>
-        <p>Solo puede existir una cuenta de cliente.</p>
+        <p>El administrador crea las cuentas. Usuario de 3 a 30 caracteres y contraseña de mínimo 8.</p>
       </div>
       <form id="customer-form">
         <label class="field">
-          <span>Correo del cliente</span>
-          <input id="customer-email" type="email" autocomplete="off" required>
+          <span>Usuario del cliente</span>
+          <input id="customer-username" type="text" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" autocomplete="off" required>
         </label>
         <label class="field">
-          <span>Contraseña temporal del cliente</span>
+          <span>Contraseña del cliente</span>
           <input id="customer-password" type="password" minlength="8" autocomplete="new-password" required>
         </label>
-        <button id="create-customer-button" class="button button-primary" type="submit">Crear cliente</button>
+        <button id="create-customer-button" class="button button-primary" type="submit">Crear usuario</button>
       </form>
       <p id="customer-status" class="message" role="status" aria-live="polite"></p>
     </section>
@@ -168,7 +168,7 @@
       <h2 id="dialog-title">Iniciar sesión</h2>
       <p id="dialog-description" class="dialog-description"></p>
       <label class="field">
-        <span>Usuario CSC o correo del cliente</span>
+        <span>Usuario o correo electrónico</span>
         <input id="login-identity" type="text" autocomplete="username" required>
       </label>
       <label class="field">
