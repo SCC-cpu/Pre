@@ -35,6 +35,7 @@ const categories = [
   { id: "res", label: "Res" },
   { id: "pollo", label: "Pollo" },
   { id: "pescado", label: "Pescado" },
+  { id:"papa", label: "Papas"},
 ];
 const categoryOrder = new Map(categories.map((category, index) => [category.id, index]));
 const currency = new Intl.NumberFormat("es-MX", {
