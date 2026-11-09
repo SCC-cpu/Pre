@@ -23,6 +23,7 @@
       </div>
       <div class="role-controls">
         <span id="role-label" class="role-label">Sin sesión</span>
+        <button id="customer-view-button" class="button button-outline" type="button" hidden>Vista cliente</button>
         <button id="admin-login-button" class="button button-gold" type="button">Iniciar sesión</button>
         <button id="logout-button" class="button button-outline" type="button" hidden>Cerrar sesión</button>
       </div>
@@ -59,6 +60,7 @@
             <input id="search" type="search" placeholder="Buscar producto" autocomplete="off">
           </label>
         </div>
+        <p id="catalog-status" class="message" role="status" aria-live="polite" hidden></p>
         <div class="table-wrap">
           <table>
             <thead>
@@ -180,6 +182,22 @@
       <div class="dialog-actions">
         <button id="cancel-login-button" class="button button-quiet" type="button">Cancelar</button>
         <button id="auth-submit-button" class="button button-primary" type="submit">Iniciar sesión</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="preview-exit-dialog" class="admin-dialog" aria-labelledby="preview-exit-title">
+    <form id="preview-exit-form">
+      <p class="eyebrow">CONFIRMAR ADMINISTRADOR</p>
+      <h2 id="preview-exit-title">Salir de vista cliente</h2>
+      <p class="dialog-description">Ingresa la contraseña del administrador para volver al panel.</p>
+      <label class="field">
+        <span>Contraseña del administrador</span>
+        <input id="preview-exit-password" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="preview-exit-error" class="message error" role="alert" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button id="cancel-preview-exit" class="button button-quiet" type="button">Cancelar</button>
+        <button id="confirm-preview-exit" class="button button-primary" type="submit">Confirmar</button>
       </div>
     </form>
   </dialog>
