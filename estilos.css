@@ -51,7 +51,7 @@ button { cursor: pointer; }
 .product-count { display: flex; align-items: baseline; gap: 7px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--gold-pale); color: var(--muted); font-size: .82rem; }
 .product-count strong { color: var(--gold-dark); font-size: 1.2rem; }
 
-.catalog-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, .8fr); gap: 14px; align-items: stretch; }
+.catalog-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, .8fr); gap: 14px; align-items: start; }
 .panel { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 4px 14px rgba(111, 79, 16, .08); }
 .list-panel { min-width: 0; overflow: hidden; }
 .list-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 17px 19px; }
@@ -60,16 +60,17 @@ button { cursor: pointer; }
 .search-box { display: flex; align-items: center; gap: 7px; width: min(220px, 45%); padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--gold-dark); background: white; }
 .search-box > span { font-size: 1.35rem; line-height: 1; }
 .search-box input { width: 100%; min-width: 0; height: 40px; border: 0; outline: 0; background: transparent; }
-.table-wrap { min-height: 200px; overflow-x: auto; }
+.table-wrap { min-height: 200px; max-height: min(65vh, 660px); overflow: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 thead { background: #f7edcf; }
 th { padding: 11px 15px; color: #694b0c; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+thead th { position: sticky; top: 0; z-index: 1; background: #f7edcf; }
 th:first-child, td:first-child { padding-left: 19px; }
 th:not(:first-child), td:not(:first-child) { text-align: right; }
 td { padding: 14px 15px; border-top: 1px solid #f1e8d2; }
-tbody tr { cursor: pointer; outline: none; transition: background .15s ease; }
-tbody tr:hover { background: #fff9e9; }
-tbody tr:focus-visible { box-shadow: inset 0 0 0 2px var(--gold); }
+tbody tr:not(.category-heading) { cursor: pointer; outline: none; transition: background .15s ease; }
+tbody tr:not(.category-heading):hover { background: #f7e6bd; box-shadow: inset 4px 0 0 var(--gold); }
+tbody tr:not(.category-heading):focus-visible { box-shadow: inset 0 0 0 2px var(--gold); }
 tbody tr.selected { background: #f5dfa4; box-shadow: inset 5px 0 0 var(--gold-dark); }
 .category-heading { background: #f7edcf; }
 .category-heading th { padding-top: 12px; padding-bottom: 9px; color: var(--gold-deep); font-size: .78rem; letter-spacing: .08em; }
@@ -81,7 +82,7 @@ tbody tr.selected { background: #f5dfa4; box-shadow: inset 5px 0 0 var(--gold-da
 .empty-state p { margin: 0; font-size: .83rem; }
 .empty-icon { display: inline-grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: var(--gold-light); color: var(--gold-dark); font-size: 1.4rem; }
 
-.detail-panel { display: flex; flex-direction: column; padding: 21px; color: #fff6df; background: linear-gradient(145deg, #a97819, #64450d); border-color: #9c701b; }
+.detail-panel { position: sticky; top: 16px; display: flex; flex-direction: column; padding: 21px; color: #fff6df; background: linear-gradient(145deg, #a97819, #64450d); border-color: #9c701b; }
 .detail-panel .eyebrow { color: #ffdf91; }
 .selected-name { min-height: 2em; margin: 5px 0 15px; overflow-wrap: anywhere; font: 700 clamp(1.35rem, 2vw, 1.8rem) Georgia, serif; }
 .price-display { display: grid; gap: 9px; }
@@ -137,6 +138,13 @@ footer { padding: 19px; color: #78643a; text-align: center; font-size: .75rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 [hidden] { display: none !important; }
 
+body.customer-view .intro,
+body.customer-view .detail-panel,
+body.customer-view #admin-panel,
+body.customer-view #customer-panel,
+body.customer-view footer { display: none; }
+body.customer-view .catalog-layout { grid-template-columns: minmax(0, 1fr); }
+
 @media (max-width: 900px) {
   .catalog-layout { grid-template-columns: minmax(0, 1.25fr) minmax(260px, .85fr); }
   #product-form { grid-template-columns: 1fr 1fr; }
@@ -159,7 +167,7 @@ footer { padding: 19px; color: #78643a; text-align: center; font-size: .75rem; }
   .intro h2 { max-width: 290px; }
   .product-count { flex-direction: column; align-items: center; gap: 0; padding: 6px 9px; }
   .catalog-layout { grid-template-columns: 1fr; }
-  .detail-panel { min-height: 300px; }
+  .detail-panel { position: static; min-height: 300px; }
   .detail-actions { margin-top: 10px; }
   .list-heading { align-items: stretch; flex-direction: column; padding: 16px; }
   .search-box { width: 100%; }
