@@ -26,8 +26,7 @@ const firebaseConfig = {
   appId: "1:902212746662:web:63ba2d403110e6cba86367",
 };
 const adminEmail = "ppomberl@gmail.com";
-const adminUsername = "admin";
-const legacyAdminUsername = "csc";
+const adminUsername = "CSC";
 const customerAuthDomain = "clientes.precios-c2e83.firebaseapp.com";
 const categories = [
   { id: "congelado", label: "Congelado" },
@@ -231,9 +230,7 @@ adminAccessForm.addEventListener("submit", async (event) => {
   try {
     const identity = loginIdentityInput.value.trim();
     const normalizedIdentity = identity.toLocaleLowerCase("es-MX");
-    const isAdminLogin = normalizedIdentity === adminUsername
-      || normalizedIdentity === legacyAdminUsername;
-    const email = isAdminLogin
+    const email = normalizedIdentity.toLocaleUpperCase("es-MX") === adminUsername
       ? adminEmail
       : normalizedIdentity.includes("@")
         ? normalizedIdentity
