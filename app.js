@@ -27,6 +27,7 @@ const firebaseConfig = {
 };
 const adminEmail = "ppomberl@gmail.com";
 const adminUsername = "CSC";
+const customerAuthDomain = "clientes.precios-c2e83.firebaseapp.com";
 const categories = [
   { id: "congelado", label: "Congelado" },
   { id: "fresco", label: "Fresco" },
@@ -64,7 +65,7 @@ const productCount = document.querySelector("#product-count");
 const adminPanel = document.querySelector("#admin-panel");
 const customerPanel = document.querySelector("#customer-panel");
 const customerForm = document.querySelector("#customer-form");
-const customerEmailInput = document.querySelector("#customer-email");
+const customerUsernameInput = document.querySelector("#customer-username");
 const customerPasswordInput = document.querySelector("#customer-password");
 const createCustomerButton = document.querySelector("#create-customer-button");
 const customerStatus = document.querySelector("#customer-status");
@@ -228,7 +229,12 @@ adminAccessForm.addEventListener("submit", async (event) => {
   authSubmitButton.disabled = true;
   try {
     const identity = loginIdentityInput.value.trim();
-    const email = identity.toLocaleUpperCase("es-MX") === adminUsername ? adminEmail : identity;
+    const normalizedIdentity = identity.toLocaleLowerCase("es-MX");
+    const email = normalizedIdentity.toLocaleUpperCase("es-MX") === adminUsername
+      ? adminEmail
+      : normalizedIdentity.includes("@")
+        ? normalizedIdentity
+        : `${normalizedIdentity}@${customerAuthDomain}`;
     await signInWithEmailAndPassword(auth, email, loginPasswordInput.value);
     adminDialog.close();
   } catch (error) {
@@ -257,7 +263,10 @@ async function handleAuthStateChange(user) {
     }
     const accessSnapshot = await getDoc(doc(database, "configuracion", "acceso"));
     const access = accessSnapshot.exists() ? accessSnapshot.data() : {};
-    if (!isAdminAccount && access.customerUid !== user.uid) {
+    const customerSnapshot = isAdminAccount
+      ? null
+      : await getDoc(doc(database, "clientes", user.uid));
+    if (!isAdminAccount && !customerSnapshot.exists() && access.customerUid !== user.uid) {
       await signOut(auth);
       showMessage(setupMessage, "Esta cuenta no tiene acceso al catálogo. Contacta al administrador.", true);
       return;
@@ -268,10 +277,7 @@ async function handleAuthStateChange(user) {
     updateRoleView();
     await refreshProducts();
     if (isAdmin) {
-      customerStatus.textContent = access.customerUid
-        ? `Ya existe una cuenta de cliente (${access.customerEmail}).`
-        : "Aún no se ha creado la cuenta de cliente.";
-      customerForm.hidden = Boolean(access.customerUid);
+      customerStatus.textContent = "Crea una cuenta para cada cliente; podrá ingresar con su usuario y contraseña.";
     }
   } catch (error) {
     showMessage(setupMessage, error.message || "No se pudo cargar el catálogo de Firebase.", true);
@@ -367,12 +373,11 @@ customerForm.addEventListener("submit", async (event) => {
   showMessage(customerStatus, "");
   try {
     const result = await createCustomerAccount({
-      email: customerEmailInput.value.trim(),
+      username: customerUsernameInput.value.trim(),
       password: customerPasswordInput.value,
     });
     customerForm.reset();
-    customerForm.hidden = true;
-    showMessage(customerStatus, `Cuenta de cliente creada: ${result.data.email}`);
+    showMessage(customerStatus, `Usuario creado: ${result.data.username}`);
   } catch (error) {
     showMessage(customerStatus, error.message || "No se pudo crear la cuenta de cliente.", true);
   } finally {
