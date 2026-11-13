@@ -64,10 +64,10 @@
             <span aria-hidden="true">⌕</span>
             <input id="search" type="search" placeholder="Buscar producto" autocomplete="off">
           </label>
-          <nav id="category-tabs" class="category-tabs" aria-label="Secciones de productos" hidden></nav>
         </div>
+        <nav id="category-tabs" class="category-tabs" role="tablist" aria-label="Secciones de productos" aria-orientation="horizontal" hidden></nav>
         <p id="catalog-status" class="message" role="status" aria-live="polite" hidden></p>
-        <div class="table-wrap">
+        <div id="product-panel" class="table-wrap" role="tabpanel" tabindex="0" aria-labelledby="category-tab-todas">
           <table>
             <thead>
               <tr>
@@ -83,7 +83,7 @@
             <h3>Aún no hay productos</h3>
             <p>El administrador agregará productos y precios al catálogo.</p>
           </div>
-          <p id="no-results" class="no-results" hidden>No hay productos en esta sección con ese nombre.</p>
+          <p id="no-results" class="no-results" hidden>No encontramos productos en esta sección.</p>
         </div>
       </div>
 
