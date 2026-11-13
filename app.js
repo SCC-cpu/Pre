@@ -113,11 +113,29 @@ let isCustomerPreview = false;
 let pricesVisible = true;
 let selectedCategory = "todas";
 let unsubscribeProducts = null;
+const messageTimeouts = new WeakMap();
 
 function showMessage(target, text, isError = false) {
+  const previousTimeout = messageTimeouts.get(target);
+  if (previousTimeout) {
+    window.clearTimeout(previousTimeout);
+    messageTimeouts.delete(target);
+  }
+
   target.textContent = text;
   target.classList.toggle("error", isError);
-  target.classList.toggle("success", Boolean(text) && !isError);
+  const isSuccess = Boolean(text) && !isError;
+  target.classList.toggle("success", isSuccess);
+
+  if (isSuccess) {
+    const timeout = window.setTimeout(() => {
+      if (messageTimeouts.get(target) !== timeout) return;
+      target.textContent = "";
+      target.classList.remove("success");
+      messageTimeouts.delete(target);
+    }, 4000);
+    messageTimeouts.set(target, timeout);
+  }
 }
 
 function makeCell(text, className) {
