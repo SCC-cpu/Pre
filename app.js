@@ -117,6 +117,7 @@ let unsubscribeProducts = null;
 function showMessage(target, text, isError = false) {
   target.textContent = text;
   target.classList.toggle("error", isError);
+  target.classList.toggle("success", Boolean(text) && !isError);
 }
 
 function makeCell(text, className) {
