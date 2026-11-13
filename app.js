@@ -231,23 +231,21 @@ function render() {
     }
 
     const row = document.createElement("tr");
-    row.tabIndex = isCustomerView ? -1 : 0;
-    row.setAttribute("aria-selected", String(!isCustomerView && product.id === selectedId));
-    if (!isCustomerView && product.id === selectedId) row.classList.add("selected");
+    row.tabIndex = 0;
+    row.setAttribute("aria-selected", String(product.id === selectedId));
+    if (product.id === selectedId) row.classList.add("selected");
     row.append(
       makeCell(product.name, "product-name-cell"),
       makeCell(currency.format(product.tablePrice), "price-cell"),
       makeCell(currency.format(product.boxPrice), "price-cell")
     );
-    if (!isCustomerView) {
-      row.addEventListener("click", () => selectProduct(product.id));
-      row.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          selectProduct(product.id);
-        }
-      });
-    }
+    row.addEventListener("click", () => selectProduct(product.id));
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectProduct(product.id);
+      }
+    });
     productList.append(row);
   }
 
