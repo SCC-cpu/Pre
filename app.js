@@ -147,7 +147,11 @@ function updateRoleView() {
 }
 
 function renderCategoryTabs() {
-  const sections = [{ id: "todas", label: "Todas" }, ...categories];
+  const tabOrder = ["fresco", "pollo", "congelado", "embutidos", "res", "pescado", "papas"];
+  const sections = [
+    { id: "todas", label: "Todas" },
+    ...tabOrder.map((id) => categories.find((category) => category.id === id)).filter(Boolean),
+  ];
 
   if (categoryTabs.childElementCount !== sections.length) {
     categoryTabs.replaceChildren();
@@ -155,9 +159,26 @@ function renderCategoryTabs() {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "category-tab";
+      button.id = `category-tab-${section.id}`;
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-controls", "product-panel");
       button.addEventListener("click", () => {
         selectedCategory = section.id;
         render();
+      });
+      button.addEventListener("keydown", (event) => {
+        const currentIndex = sections.findIndex((item) => item.id === section.id);
+        let nextIndex = currentIndex;
+        if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % sections.length;
+        else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + sections.length) % sections.length;
+        else if (event.key === "Home") nextIndex = 0;
+        else if (event.key === "End") nextIndex = sections.length - 1;
+        else return;
+
+        event.preventDefault();
+        selectedCategory = sections[nextIndex].id;
+        render();
+        categoryTabs.children[nextIndex].focus();
       });
       categoryTabs.append(button);
     }
@@ -165,12 +186,12 @@ function renderCategoryTabs() {
 
   sections.forEach((section, index) => {
     const button = categoryTabs.children[index];
-    const count = section.id === "todas"
-      ? products.length
-      : products.filter((product) => product.category === section.id).length;
-    button.setAttribute("aria-pressed", String(selectedCategory === section.id));
-    button.textContent = `${section.label} (${count})`;
+    const isSelected = selectedCategory === section.id;
+    button.setAttribute("aria-selected", String(isSelected));
+    button.tabIndex = isSelected ? 0 : -1;
+    button.textContent = section.label;
   });
+  document.querySelector("#product-panel").setAttribute("aria-labelledby", `category-tab-${selectedCategory}`);
 }
 
 
@@ -197,7 +218,7 @@ function render() {
 
   let currentCategory = null;
   for (const product of sortedProducts) {
-    if (product.category !== currentCategory) {
+    if (product.category !== currentCategory && (!isCustomerView || selectedCategory === "todas")) {
       currentCategory = product.category;
       const heading = document.createElement("tr");
       heading.className = "category-heading";
@@ -274,6 +295,7 @@ function subscribeToProducts() {
     }
   );
 }
+
 
 function openLoginDialog() {
   authError.textContent = "";
