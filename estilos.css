@@ -128,6 +128,13 @@ tbody tr.selected { background: #f5dfa4; box-shadow: inset 5px 0 0 var(--gold-da
 .button-quiet { color: #59451a; background: #f7edcf; border-color: #e7d5a5; }
 .message { min-height: 17px; margin: 8px 0 0; color: #715013; font-size: .8rem; }
 .message.error { color: #8a3c18; }
+.message.success { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 9px 12px; border: 1px solid #a7d9b4; border-radius: 9px; color: #176b36; background: #effaf1; box-shadow: 0 3px 10px rgba(22, 101, 52, .08); font-size: .86rem; font-weight: 700; animation: success-appear .22s ease-out both; }
+.message.success::before { content: "✓"; display: grid; flex: 0 0 25px; width: 25px; height: 25px; place-items: center; border-radius: 50%; color: white; background: #24934b; font-size: .95rem; line-height: 1; animation: check-pop .42s cubic-bezier(.2, .8, .2, 1.3) both; }
+@keyframes success-appear { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes check-pop { 0% { opacity: 0; transform: scale(.35) rotate(-35deg); } 70% { opacity: 1; transform: scale(1.16) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .message.success, .message.success::before { animation: none; }
+}
 #customer-form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; align-items: end; gap: 10px; }
 #customer-form .field > input { padding: 0 11px; }
 
