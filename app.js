@@ -1,9 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
   getAuth,
+  inMemoryPersistence,
   EmailAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,
+  setPersistence,
   signInWithEmailAndPassword,
   signOut,
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
@@ -56,6 +58,7 @@ const emptyState = document.querySelector("#empty-state");
 const noResults = document.querySelector("#no-results");
 const catalogStatus = document.querySelector("#catalog-status");
 const searchInput = document.querySelector("#search");
+const privacyToggle = document.querySelector("#privacy-toggle");
 const message = document.querySelector("#message");
 const editButton = document.querySelector("#edit-button");
 const deleteButton = document.querySelector("#delete-button");
@@ -84,8 +87,6 @@ const logoutButton = document.querySelector("#logout-button");
 const signedOutView = document.querySelector("#signed-out-view");
 const authenticatedContent = document.querySelector("#authenticated-content");
 const setupMessage = document.querySelector("#setup-message");
-const adminIntro = document.querySelector("#admin-intro");
-const customerIntro = document.querySelector("#customer-intro");
 const adminDialog = document.querySelector("#admin-dialog");
 const adminAccessForm = document.querySelector("#admin-access-form");
 const loginIdentityInput = document.querySelector("#login-identity");
@@ -109,6 +110,7 @@ let selectedId = null;
 let editingId = null;
 let isAdmin = false;
 let isCustomerPreview = false;
+let pricesVisible = true;
 let selectedCategory = "todas";
 let unsubscribeProducts = null;
 
@@ -138,12 +140,14 @@ function updateRoleView() {
   logoutButton.hidden = !currentUser || isCustomerPreview;
   signedOutView.hidden = Boolean(currentUser);
   authenticatedContent.hidden = !currentUser;
-  adminIntro.hidden = isCustomerView;
-  customerIntro.hidden = !isCustomerView;
   adminPanel.hidden = !isAdmin || isCustomerPreview;
   customerPanel.hidden = !isAdmin || isCustomerPreview;
   detailActions.hidden = !isAdmin || isCustomerPreview;
   categoryTabs.hidden = !isCustomerView;
+  privacyToggle.hidden = !isCustomerView;
+  privacyToggle.textContent = pricesVisible ? "Ocultar precios para foto" : "Mostrar precios";
+  privacyToggle.setAttribute("aria-pressed", String(!pricesVisible));
+  document.body.classList.toggle("prices-hidden", isCustomerView && !pricesVisible);
 }
 
 function renderCategoryTabs() {
@@ -236,8 +240,8 @@ function render() {
     if (product.id === selectedId) row.classList.add("selected");
     row.append(
       makeCell(product.name, "product-name-cell"),
-      makeCell(currency.format(product.tablePrice), "price-cell"),
-      makeCell(currency.format(product.boxPrice), "price-cell")
+      makeCell(isCustomerView && !pricesVisible ? "" : currency.format(product.tablePrice), "price-cell"),
+      makeCell(isCustomerView && !pricesVisible ? "" : currency.format(product.boxPrice), "price-cell")
     );
     row.addEventListener("click", () => selectProduct(product.id));
     row.addEventListener("keydown", (event) => {
@@ -256,8 +260,8 @@ function render() {
   const selectedProduct = products.find((product) => product.id === selectedId);
   if (selectedProduct) {
     selectedName.textContent = selectedProduct.name;
-    selectedTablePrice.textContent = currency.format(selectedProduct.tablePrice);
-    selectedBoxPrice.textContent = currency.format(selectedProduct.boxPrice);
+    selectedTablePrice.textContent = isCustomerView && !pricesVisible ? "" : currency.format(selectedProduct.tablePrice);
+    selectedBoxPrice.textContent = isCustomerView && !pricesVisible ? "" : currency.format(selectedProduct.boxPrice);
   } else {
     selectedName.textContent = "Selecciona un producto";
     selectedTablePrice.textContent = "—";
@@ -317,6 +321,7 @@ customerViewButton.addEventListener("click", () => {
   if (!isAdmin) return;
   if (!isCustomerPreview) {
     isCustomerPreview = true;
+    pricesVisible = true;
     selectedCategory = "todas";
     searchInput.value = "";
     updateRoleView();
@@ -331,6 +336,14 @@ customerViewButton.addEventListener("click", () => {
 });
 
 cancelPreviewExitButton.addEventListener("click", () => previewExitDialog.close());
+
+privacyToggle.addEventListener("click", () => {
+  const isCustomerView = Boolean(currentUser) && (!isAdmin || isCustomerPreview);
+  if (!isCustomerView) return;
+  pricesVisible = !pricesVisible;
+  updateRoleView();
+  render();
+});
 
 previewExitForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -380,6 +393,7 @@ async function handleAuthStateChange(user) {
     currentUser = null;
     isAdmin = false;
     isCustomerPreview = false;
+    pricesVisible = true;
     products = [];
     selectedId = null;
     updateRoleView();
@@ -407,6 +421,7 @@ async function handleAuthStateChange(user) {
     currentUser = user;
     isAdmin = isAdminAccount;
     isCustomerPreview = false;
+    pricesVisible = true;
     updateRoleView();
     subscribeToProducts();
     if (isAdmin) {
@@ -526,10 +541,13 @@ function disableLoginControls() {
   signedOutLoginButton.disabled = true;
 }
 
-function initialize() {
+async function initialize() {
   try {
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+    await auth.authStateReady();
+    if (auth.currentUser) await signOut(auth);
+    await setPersistence(auth, inMemoryPersistence);
     database = getFirestore(app);
     createCustomerAccount = httpsCallable(getFunctions(app), "createCustomerAccount");
     connectionLabel.textContent = "Conectado a Firebase";
