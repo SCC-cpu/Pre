@@ -84,6 +84,8 @@ const logoutButton = document.querySelector("#logout-button");
 const signedOutView = document.querySelector("#signed-out-view");
 const authenticatedContent = document.querySelector("#authenticated-content");
 const setupMessage = document.querySelector("#setup-message");
+const adminIntro = document.querySelector("#admin-intro");
+const customerIntro = document.querySelector("#customer-intro");
 const adminDialog = document.querySelector("#admin-dialog");
 const adminAccessForm = document.querySelector("#admin-access-form");
 const loginIdentityInput = document.querySelector("#login-identity");
@@ -136,6 +138,8 @@ function updateRoleView() {
   logoutButton.hidden = !currentUser || isCustomerPreview;
   signedOutView.hidden = Boolean(currentUser);
   authenticatedContent.hidden = !currentUser;
+  adminIntro.hidden = isCustomerView;
+  customerIntro.hidden = !isCustomerView;
   adminPanel.hidden = !isAdmin || isCustomerPreview;
   customerPanel.hidden = !isAdmin || isCustomerPreview;
   detailActions.hidden = !isAdmin || isCustomerPreview;
@@ -293,7 +297,10 @@ customerViewButton.addEventListener("click", () => {
   if (!isAdmin) return;
   if (!isCustomerPreview) {
     isCustomerPreview = true;
+    selectedCategory = "todas";
+    searchInput.value = "";
     updateRoleView();
+    render();
     return;
   }
 
@@ -316,6 +323,7 @@ previewExitForm.addEventListener("submit", async (event) => {
     await reauthenticateWithCredential(auth.currentUser, credential);
     isCustomerPreview = false;
     updateRoleView();
+    render();
     previewExitDialog.close();
   } catch (error) {
     previewExitError.textContent = error.message || "No se pudo confirmar la contraseña del administrador.";
