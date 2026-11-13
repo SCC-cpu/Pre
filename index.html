@@ -39,15 +39,10 @@
     </section>
     <div id="authenticated-content" hidden>
     <section class="intro">
-      <div id="admin-intro">
+      <div>
         <p class="eyebrow">CATÁLOGO DE SUCURSAL</p>
         <h2>Precios Super Carnes El Colorado.</h2>
         <p>Selecciona un producto para consultar sus precios.</p>
-      </div>
-      <div id="customer-intro" hidden>
-        <p class="eyebrow">CATÁLOGO PARA CLIENTES</p>
-        <h2>Todo lo que buscas, en un solo lugar.</h2>
-        <p>Explora nuestros productos y consulta sus precios actualizados.</p>
       </div>
       <div class="product-count"><strong id="product-count">0</strong><span>productos</span></div>
     </section>
@@ -64,6 +59,7 @@
             <span aria-hidden="true">⌕</span>
             <input id="search" type="search" placeholder="Buscar producto" autocomplete="off">
           </label>
+          <button id="privacy-toggle" class="button button-quiet" type="button" aria-pressed="false" title="Oculta los importes de la tabla y deja vacías las tarjetas antes de tomar una foto." hidden>Ocultar precios para foto</button>
         </div>
         <nav id="category-tabs" class="category-tabs" role="tablist" aria-label="Secciones de productos" aria-orientation="horizontal" hidden></nav>
         <p id="catalog-status" class="message" role="status" aria-live="polite" hidden></p>
