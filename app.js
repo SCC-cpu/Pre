@@ -68,6 +68,7 @@ const selectedBoxPrice = document.querySelector("#selected-box-price");
 const productCount = document.querySelector("#product-count");
 const adminPanel = document.querySelector("#admin-panel");
 const customerPanel = document.querySelector("#customer-panel");
+const categoryTabs = document.querySelector("#category-tabs");
 const customerForm = document.querySelector("#customer-form");
 const customerUsernameInput = document.querySelector("#customer-username");
 const customerPasswordInput = document.querySelector("#customer-password");
@@ -106,6 +107,7 @@ let selectedId = null;
 let editingId = null;
 let isAdmin = false;
 let isCustomerPreview = false;
+let selectedCategory = "todas";
 let unsubscribeProducts = null;
 
 function showMessage(target, text, isError = false) {
@@ -137,7 +139,36 @@ function updateRoleView() {
   adminPanel.hidden = !isAdmin || isCustomerPreview;
   customerPanel.hidden = !isAdmin || isCustomerPreview;
   detailActions.hidden = !isAdmin || isCustomerPreview;
+  categoryTabs.hidden = !isCustomerView;
 }
+
+function renderCategoryTabs() {
+  const sections = [{ id: "todas", label: "Todas" }, ...categories];
+
+  if (categoryTabs.childElementCount !== sections.length) {
+    categoryTabs.replaceChildren();
+    for (const section of sections) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "category-tab";
+      button.addEventListener("click", () => {
+        selectedCategory = section.id;
+        render();
+      });
+      categoryTabs.append(button);
+    }
+  }
+
+  sections.forEach((section, index) => {
+    const button = categoryTabs.children[index];
+    const count = section.id === "todas"
+      ? products.length
+      : products.filter((product) => product.category === section.id).length;
+    button.setAttribute("aria-pressed", String(selectedCategory === section.id));
+    button.textContent = `${section.label} (${count})`;
+  });
+}
+
 
 function selectProduct(id) {
   selectedId = id;
@@ -145,10 +176,13 @@ function selectProduct(id) {
 }
 
 function render() {
+  const isCustomerView = Boolean(currentUser) && (!isAdmin || isCustomerPreview);
   const query = searchInput.value.trim().toLocaleLowerCase("es-MX");
   const visibleProducts = products.filter((product) =>
-    product.name.toLocaleLowerCase("es-MX").includes(query)
+    product.name.toLocaleLowerCase("es-MX").includes(query) &&
+    (!isCustomerView || selectedCategory === "todas" || product.category === selectedCategory)
   );
+  renderCategoryTabs();
   const sortedProducts = [...visibleProducts].sort((first, second) => {
     const firstCategoryOrder = categoryOrder.get(first.category) ?? categories.length;
     const secondCategoryOrder = categoryOrder.get(second.category) ?? categories.length;
@@ -172,27 +206,29 @@ function render() {
     }
 
     const row = document.createElement("tr");
-    row.tabIndex = 0;
-    row.setAttribute("aria-selected", String(product.id === selectedId));
-    if (product.id === selectedId) row.classList.add("selected");
+    row.tabIndex = isCustomerView ? -1 : 0;
+    row.setAttribute("aria-selected", String(!isCustomerView && product.id === selectedId));
+    if (!isCustomerView && product.id === selectedId) row.classList.add("selected");
     row.append(
       makeCell(product.name, "product-name-cell"),
       makeCell(currency.format(product.tablePrice), "price-cell"),
       makeCell(currency.format(product.boxPrice), "price-cell")
     );
-    row.addEventListener("click", () => selectProduct(product.id));
-    row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        selectProduct(product.id);
-      }
-    });
+    if (!isCustomerView) {
+      row.addEventListener("click", () => selectProduct(product.id));
+      row.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectProduct(product.id);
+        }
+      });
+    }
     productList.append(row);
   }
 
   emptyState.hidden = products.length > 0;
   noResults.hidden = products.length === 0 || visibleProducts.length > 0;
-  productCount.textContent = String(products.length);
+  productCount.textContent = String(isCustomerView ? visibleProducts.length : products.length);
 
   const selectedProduct = products.find((product) => product.id === selectedId);
   if (selectedProduct) {
@@ -480,4 +516,5 @@ function initialize() {
   }
 }
 
+renderCategoryTabs();
 initialize();
