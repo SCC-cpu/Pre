@@ -58,7 +58,6 @@ const emptyState = document.querySelector("#empty-state");
 const noResults = document.querySelector("#no-results");
 const catalogStatus = document.querySelector("#catalog-status");
 const searchInput = document.querySelector("#search");
-const privacyToggle = document.querySelector("#privacy-toggle");
 const message = document.querySelector("#message");
 const editButton = document.querySelector("#edit-button");
 const deleteButton = document.querySelector("#delete-button");
@@ -110,7 +109,6 @@ let selectedId = null;
 let editingId = null;
 let isAdmin = false;
 let isCustomerPreview = false;
-let pricesVisible = true;
 let selectedCategory = "todas";
 let unsubscribeProducts = null;
 const messageTimeouts = new WeakMap();
@@ -163,10 +161,6 @@ function updateRoleView() {
   customerPanel.hidden = !isAdmin || isCustomerPreview;
   detailActions.hidden = !isAdmin || isCustomerPreview;
   categoryTabs.hidden = !isCustomerView;
-  privacyToggle.hidden = !isCustomerView;
-  privacyToggle.textContent = pricesVisible ? "Ocultar precios para foto" : "Mostrar precios";
-  privacyToggle.setAttribute("aria-pressed", String(!pricesVisible));
-  document.body.classList.toggle("prices-hidden", isCustomerView && !pricesVisible);
 }
 
 function renderCategoryTabs() {
@@ -230,6 +224,7 @@ function render() {
     product.name.toLocaleLowerCase("es-MX").includes(query) &&
     (!isCustomerView || selectedCategory === "todas" || product.category === selectedCategory)
   );
+  if (!visibleProducts.some((product) => product.id === selectedId)) selectedId = null;
   renderCategoryTabs();
   const sortedProducts = [...visibleProducts].sort((first, second) => {
     const firstCategoryOrder = categoryOrder.get(first.category) ?? categories.length;
@@ -259,8 +254,8 @@ function render() {
     if (product.id === selectedId) row.classList.add("selected");
     row.append(
       makeCell(product.name, "product-name-cell"),
-      makeCell(isCustomerView && !pricesVisible ? "" : currency.format(product.tablePrice), "price-cell"),
-      makeCell(isCustomerView && !pricesVisible ? "" : currency.format(product.boxPrice), "price-cell")
+      makeCell(currency.format(product.tablePrice), "price-cell"),
+      makeCell(currency.format(product.boxPrice), "price-cell")
     );
     row.addEventListener("click", () => selectProduct(product.id));
     row.addEventListener("keydown", (event) => {
@@ -274,13 +269,13 @@ function render() {
 
   emptyState.hidden = products.length > 0;
   noResults.hidden = products.length === 0 || visibleProducts.length > 0;
-  productCount.textContent = String(isCustomerView ? visibleProducts.length : products.length);
+  productCount.textContent = String(visibleProducts.length);
 
-  const selectedProduct = products.find((product) => product.id === selectedId);
+  const selectedProduct = visibleProducts.find((product) => product.id === selectedId);
   if (selectedProduct) {
     selectedName.textContent = selectedProduct.name;
-    selectedTablePrice.textContent = isCustomerView && !pricesVisible ? "" : currency.format(selectedProduct.tablePrice);
-    selectedBoxPrice.textContent = isCustomerView && !pricesVisible ? "" : currency.format(selectedProduct.boxPrice);
+    selectedTablePrice.textContent = currency.format(selectedProduct.tablePrice);
+    selectedBoxPrice.textContent = currency.format(selectedProduct.boxPrice);
   } else {
     selectedName.textContent = "Selecciona un producto";
     selectedTablePrice.textContent = "—";
@@ -340,7 +335,6 @@ customerViewButton.addEventListener("click", () => {
   if (!isAdmin) return;
   if (!isCustomerPreview) {
     isCustomerPreview = true;
-    pricesVisible = true;
     selectedCategory = "todas";
     searchInput.value = "";
     updateRoleView();
@@ -355,14 +349,6 @@ customerViewButton.addEventListener("click", () => {
 });
 
 cancelPreviewExitButton.addEventListener("click", () => previewExitDialog.close());
-
-privacyToggle.addEventListener("click", () => {
-  const isCustomerView = Boolean(currentUser) && (!isAdmin || isCustomerPreview);
-  if (!isCustomerView) return;
-  pricesVisible = !pricesVisible;
-  updateRoleView();
-  render();
-});
 
 previewExitForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -412,7 +398,6 @@ async function handleAuthStateChange(user) {
     currentUser = null;
     isAdmin = false;
     isCustomerPreview = false;
-    pricesVisible = true;
     products = [];
     selectedId = null;
     updateRoleView();
@@ -440,7 +425,6 @@ async function handleAuthStateChange(user) {
     currentUser = user;
     isAdmin = isAdminAccount;
     isCustomerPreview = false;
-    pricesVisible = true;
     updateRoleView();
     subscribeToProducts();
     if (isAdmin) {
