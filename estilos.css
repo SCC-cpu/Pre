@@ -277,6 +277,13 @@ body.customer-view #privacy-toggle {
   .field-name { grid-column: 1 / -1; }
   .form-actions { justify-content: end; }
 }
+@media (min-width: 681px) and (max-width: 900px) and (orientation: portrait) {
+  th { height: 54px; padding: 14px 18px; font-size: .88rem; }
+  td { height: 66px; padding: 16px 18px; font-size: 1.15rem; }
+  .price-cell, body.customer-view .price-cell { font-size: 1.2rem; }
+  .category-heading th { height: 47px; font-size: .9rem; }
+  body.customer-view .product-name-cell { font-size: 1.15rem; }
+}
 @media (max-width: 680px) {
   .topbar { min-height: 90px; padding: 10px 4vw; gap: 10px; flex-wrap: wrap; }
   .brand-logo { width: 58px; height: 58px; }
